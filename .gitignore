@@ -1,0 +1,9 @@
+node_modules/
+data/
+out/
+dl/
+keys/
+*.keystore
+*.apk
+*.exe
+*.idsig
