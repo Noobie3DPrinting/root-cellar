@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:__BG__;--ink:#2a241d;--muted:#7d7266;--card:#fffdf9;--line:#e6dccd;--accent:__BAR__}
+@media (prefers-color-scheme:dark){:root{--bg:__BAR_DARK__;--ink:#f1e9de;--muted:#a59a8c;--card:#24201b;--line:#383128}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,sans-serif;padding:28px 20px}
+h1{font-size:24px;margin:0 0 4px}.muted{color:var(--muted);font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:18px}
+input{width:100%;box-sizing:border-box;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:inherit;font:inherit}
+button{width:100%;margin-top:14px;padding:14px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:700}
+.err{color:#d0543a;margin-top:10px;min-height:1.2em;font-size:14px}code{font-size:13px}
+</style></head><body>
+<h1>__LABEL__</h1><div class="muted">__SUITE__</div>
+<div class="card"><b>Where is your server?</b>
+<p class="muted">Type the address you use for __LABEL__ in your web browser, for example <code>https://myserver.tail1234.ts.net:8447</code> (works anywhere with Tailscale) or <code>http://192.168.1.20:8093</code> (home Wi-Fi only).</p>
+<input id="u" type="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://…" value="__CURRENT__">
+<div class="err" id="e">__ERROR__</div><button id="b">Connect</button></div>
+<script>
+function showErr(m){document.getElementById('e').textContent=m;var b=document.getElementById('b');b.disabled=false;b.textContent='Connect'}
+document.getElementById('b').onclick=function(){var b=this;b.disabled=true;b.textContent='Connecting…';document.getElementById('e').textContent='';RCAndroid.setServer(document.getElementById('u').value)};
+</script></body></html>

@@ -1,0 +1,23 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Set up</title><link rel="stylesheet" href="shell.css"></head><body>
+<div class="brand"><img id="icon" alt=""><div><h1 id="name"></h1><div class="muted small" id="suite"></div></div></div>
+<div class="card">
+  <h2>Where is your server?</h2>
+  <p class="muted small">Type the address you use for this app in your web browser. For example <code>https://myserver.tail1234.ts.net:8447</code> (works at home and away with Tailscale) or <code>http://192.168.1.20:8093</code> (home network only). The setup guide lists the address for each app.</p>
+  <input id="url" placeholder="https://…" autocomplete="off" spellcheck="false" autofocus>
+  <div class="err" id="err"></div>
+  <button class="btn" id="go">Connect</button>
+</div>
+<p class="muted small" style="margin-top:16px"><button class="link" id="home">← All apps</button></p>
+<script>
+(async () => {
+  const q = new URLSearchParams(location.search), id = q.get('app'), i = await RC.info(), a = i.apps.find(x => x.id === id) || {};
+  document.title = a.name || 'Set up'; document.getElementById('name').textContent = a.name || ''; document.getElementById('suite').textContent = i.suite;
+  document.getElementById('icon').src = 'icons/' + id + '.png';
+  if (q.get('error')) document.getElementById('err').textContent = q.get('error');
+  if (i.servers[id]) document.getElementById('url').value = i.servers[id];
+  const go = async () => { const b = document.getElementById('go'); b.disabled = true; b.textContent = 'Connecting…'; document.getElementById('err').textContent = '';
+    const r = await RC.setServer(id, document.getElementById('url').value); if (r.error) { document.getElementById('err').textContent = r.error; b.disabled = false; b.textContent = 'Connect'; } };
+  document.getElementById('go').onclick = go; document.getElementById('url').onkeydown = e => { if (e.key === 'Enter') go(); };
+  document.getElementById('home').onclick = () => RC.open('launcher');
+})();
+</script></body></html>

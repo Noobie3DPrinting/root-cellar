@@ -1,0 +1,25 @@
+Root Cellar includes or uses these open-source components. Thank you to their authors.
+
+Server (installed by npm when Checkbook starts)
+  express            MIT        https://github.com/expressjs/express
+  better-sqlite3     MIT        https://github.com/WiseLibs/better-sqlite3
+  bcryptjs           MIT        https://github.com/dcodeIO/bcrypt.js
+
+In the web pages
+  jsPDF (Labels)                 MIT          https://github.com/parallax/jsPDF            (server/labels/public/vendor)
+  ZXing "library" (Movies)       Apache-2.0   https://github.com/zxing-js/library          (server/movies/public/vendor)
+  Fonts (Labels, Movies)         SIL Open Font License 1.1, via Fontsource (https://fontsource.org):
+    Inter, Oswald, Bebas Neue, Roboto Slab, Merriweather, Playfair Display, Caveat, Pacifico,
+    Comic Neue, Roboto Mono. License texts are next to the font files (…/public/fonts/*-LICENSE.txt).
+  Labels clip art: drawn for this project, released CC0 (public domain).
+
+Runs on
+  Node.js (node:22 Docker images)   MIT and others   https://nodejs.org
+  Docker, Tailscale, CUPS, printer-driver-dymo (installed separately; their own licenses apply)
+
+Windows app
+  Electron   MIT   https://www.electronjs.org   (includes Chromium; see LICENSES.chromium.html inside the installed app)
+
+Online services the apps can use (optional, your choice)
+  Movies: UPCitemdb (barcode lookups), TMDB (posters & titles; "This product uses the TMDB API but is not endorsed or
+  certified by TMDB."), your own Jellyfin server.

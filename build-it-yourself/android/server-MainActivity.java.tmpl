@@ -1,0 +1,219 @@
+package __PKG__;
+
+import android.Manifest;
+import android.app.Activity;
+import android.app.DownloadManager;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.graphics.Color;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
+import android.util.Base64;
+import android.view.Window;
+import android.webkit.CookieManager;
+import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
+import android.webkit.URLUtil;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Scanner;
+
+/**
+ * __LABEL__ for Android: opens __LABEL__ from your own server.
+ * The first time it asks for the server's address (the same one you use in a web browser).
+ */
+public class MainActivity extends Activity {
+    private static final int REQ_FILE = 1, REQ_SAVE = 2, REQ_CAMERA = 3;
+    private WebView web;
+    private ValueCallback<Uri[]> fileCallback;
+    private PermissionRequest pendingPermission;
+    private byte[] pendingSave;
+    private boolean onSetup = false;
+
+    private SharedPreferences prefs() { return getSharedPreferences("app", MODE_PRIVATE); }
+    private String server() { return prefs().getString("server", ""); }
+
+    @Override
+    protected void onCreate(Bundle state) {
+        super.onCreate(state);
+        boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        Window w = getWindow();
+        w.setStatusBarColor(Color.parseColor(dark ? "__BAR_DARK__" : "__BAR__"));
+        w.setNavigationBarColor(Color.parseColor(dark ? "__BAR_DARK__" : "__BG__"));
+        web = new WebView(this);
+        web.setBackgroundColor(Color.parseColor(dark ? "__BAR_DARK__" : "__BG__"));
+        setContentView(web);
+        WebSettings s = web.getSettings();
+        s.setJavaScriptEnabled(true);
+        s.setDomStorageEnabled(true);
+        s.setDatabaseEnabled(true);
+        s.setMediaPlaybackRequiresUserGesture(false);
+        s.setAllowFileAccess(false);
+        s.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+        s.setUserAgentString(s.getUserAgentString() + " RootCellar/Android");
+        CookieManager.getInstance().setAcceptCookie(true);
+        CookieManager.getInstance().setAcceptThirdPartyCookies(web, false);
+
+        web.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest req, WebResourceError err) {
+                if (req.isForMainFrame() && !onSetup) showSetup("Couldn't reach " + server() + ". Check the address, and that Tailscale is on if you're away from home.");
+            }
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
+                String url = req.getUrl().toString();
+                if (onSetup) return true;
+                if (url.startsWith(server())) return false;
+                try { startActivity(new Intent(Intent.ACTION_VIEW, req.getUrl())); } catch (Exception ignored) { }
+                return true;
+            }
+            @Override
+            public void onPageFinished(WebView view, String url) { CookieManager.getInstance().flush(); }
+        });
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                runOnUiThread(new Runnable() { @Override public void run() {
+                    boolean wantsCamera = false;
+                    for (String r : request.getResources()) if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(r)) wantsCamera = true;
+                    if (!wantsCamera) { request.deny(); return; }
+                    if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                        request.grant(new String[] { PermissionRequest.RESOURCE_VIDEO_CAPTURE });
+                    } else { pendingPermission = request; requestPermissions(new String[] { Manifest.permission.CAMERA }, REQ_CAMERA); }
+                } });
+            }
+            @Override
+            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+                if (fileCallback != null) fileCallback.onReceiveValue(null);
+                fileCallback = callback;
+                try { startActivityForResult(params.createIntent(), REQ_FILE); }
+                catch (Exception e) {
+                    Intent pick = new Intent(Intent.ACTION_GET_CONTENT); pick.addCategory(Intent.CATEGORY_OPENABLE); pick.setType("*/*");
+                    try { startActivityForResult(pick, REQ_FILE); } catch (Exception e2) { fileCallback = null; return false; }
+                }
+                return true;
+            }
+        });
+        // Downloads: normal links go to the Downloads folder; files the page makes itself (like a PDF) open a save screen.
+        web.setDownloadListener(new android.webkit.DownloadListener() { @Override public void onDownloadStart(String url, String ua, String disposition, String mime, long length) {
+            if (url.startsWith("blob:") || url.startsWith("data:")) {
+                String name = URLUtil.guessFileName(url, disposition, mime);
+                web.evaluateJavascript("(function(){fetch('" + url.replace("'", "\\'") + "').then(r=>r.blob()).then(b=>{var f=new FileReader();f.onload=function(){RCAndroid.saveFile(" + jsString(name) + ",String(f.result).split(',')[1]," + jsString(mime) + ")};f.readAsDataURL(b)})})()", null);
+                return;
+            }
+            try {
+                DownloadManager.Request r = new DownloadManager.Request(Uri.parse(url));
+                String cookie = CookieManager.getInstance().getCookie(url);
+                if (cookie != null) r.addRequestHeader("Cookie", cookie);
+                r.addRequestHeader("User-Agent", ua);
+                String name = URLUtil.guessFileName(url, disposition, mime);
+                r.setTitle(name); r.setMimeType(mime);
+                r.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                r.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, name);
+                ((DownloadManager) getSystemService(DOWNLOAD_SERVICE)).enqueue(r);
+                toastJs("Downloading " + name);
+            } catch (Exception e) { toastJs("Couldn't download that file"); }
+        } });
+        web.addJavascriptInterface(new Bridge(), "RCAndroid");
+        if (server().isEmpty()) showSetup(null);
+        else if (state != null) web.restoreState(state);
+        else web.loadUrl(server() + "/");
+    }
+
+    private static String jsString(String s) { return "'" + (s == null ? "" : s.replace("\\", "\\\\").replace("'", "\\'")) + "'"; }
+
+    private void showSetup(String error) {
+        onSetup = true;
+        String html;
+        try { InputStream in = getAssets().open("setup.html"); Scanner sc = new Scanner(in, "UTF-8").useDelimiter("\\A"); html = sc.hasNext() ? sc.next() : ""; in.close(); }
+        catch (Exception e) { html = "<p>Setup page missing</p>"; }
+        html = html.replace("__ERROR__", error == null ? "" : error.replace("<", "&lt;")).replace("__CURRENT__", server().replace("\"", "&quot;"));
+        web.loadDataWithBaseURL("https://setup.invalid/", html, "text/html", "utf-8", null);
+    }
+
+    private class Bridge {
+        @JavascriptInterface
+        public void setServer(final String raw) {
+            new Thread(new Runnable() { @Override public void run() {
+                String url = raw == null ? "" : raw.trim();
+                while (url.endsWith("/")) url = url.substring(0, url.length() - 1);
+                if (!url.isEmpty() && !url.matches("(?i)^https?://.*")) url = "http://" + url;
+                String err = null;
+                try {
+                    HttpURLConnection c = (HttpURLConnection) new URL(url + "/healthz").openConnection();
+                    c.setConnectTimeout(8000); c.setReadTimeout(8000);
+                    int code = c.getResponseCode(); c.disconnect();
+                    if (code != 200) err = "That address answered, but it doesn't look like __LABEL__ (" + code + ").";
+                } catch (Exception e) { err = "Couldn't reach " + url + ". Check the address, and that Tailscale is on if you're away from home."; }
+                final String fUrl = url, fErr = err;
+                runOnUiThread(new Runnable() { @Override public void run() {
+                    if (fErr != null) { web.evaluateJavascript("window.showErr && showErr(" + jsString(fErr) + ")", null); return; }
+                    prefs().edit().putString("server", fUrl).apply();
+                    onSetup = false; web.clearHistory(); web.loadUrl(fUrl + "/");
+                } });
+            } }).start();
+        }
+        @JavascriptInterface
+        public void changeServer() { runOnUiThread(new Runnable() { @Override public void run() { showSetup(null); } }); }
+        @JavascriptInterface
+        public void saveFile(final String name, final String base64, final String mimeType) {
+            pendingSave = Base64.decode(base64, Base64.DEFAULT);
+            runOnUiThread(new Runnable() { @Override public void run() {
+                Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType(mimeType == null || mimeType.isEmpty() ? "application/octet-stream" : mimeType);
+                i.putExtra(Intent.EXTRA_TITLE, name);
+                try { startActivityForResult(i, REQ_SAVE); } catch (Exception e) { toastJs("Couldn't open the save screen"); }
+            } });
+        }
+    }
+
+    private void toastJs(String msg) { web.evaluateJavascript("(function(){var m=" + jsString(msg) + ";if(window.toast)toast(m)})()", null); }
+
+    @Override
+    public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        if (req == REQ_CAMERA && pendingPermission != null) {
+            if (res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED) pendingPermission.grant(new String[] { PermissionRequest.RESOURCE_VIDEO_CAPTURE });
+            else pendingPermission.deny();
+            pendingPermission = null;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int req, int result, Intent data) {
+        super.onActivityResult(req, result, data);
+        if (req == REQ_FILE && fileCallback != null) {
+            Uri[] picked = WebChromeClient.FileChooserParams.parseResult(result, data);
+            fileCallback.onReceiveValue(picked); fileCallback = null;
+        } else if (req == REQ_SAVE) {
+            byte[] bytes = pendingSave; pendingSave = null;
+            if (result != RESULT_OK || data == null || data.getData() == null || bytes == null) return;
+            try { OutputStream out = getContentResolver().openOutputStream(data.getData()); out.write(bytes); out.close(); toastJs("Saved"); }
+            catch (Exception e) { toastJs("Couldn't save the file"); }
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!onSetup && web.canGoBack()) web.goBack();
+        else if (onSetup && !server().isEmpty()) { onSetup = false; web.loadUrl(server() + "/"); }
+        else moveTaskToBack(true);
+    }
+
+    @Override protected void onSaveInstanceState(Bundle out) { super.onSaveInstanceState(out); if (!onSetup) web.saveState(out); }
+    @Override protected void onResume() { super.onResume(); web.onResume(); }
+    @Override protected void onPause() { web.onPause(); CookieManager.getInstance().flush(); super.onPause(); }
+}

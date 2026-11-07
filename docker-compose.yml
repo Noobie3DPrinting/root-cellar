@@ -1,0 +1,83 @@
+# Root Cellar — Checkbook, Notes, Movies and Labels on your own server.
+#
+# install.sh writes a copy of this file for you. If you use Portainer instead:
+#   1. Copy the "server" folder from the download to your server, e.g. /opt/root-cellar/server
+#      (on a NAS this is often something like /volume1/docker/root-cellar/server).
+#   2. Portainer → Stacks → Add stack → Web editor → paste this whole file.
+#   3. Under "Environment variables" add  RC_DIR = the folder that holds "server"  and  TZ = your time zone
+#      (e.g. America/New_York — list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
+#   4. Deploy the stack. Don't need an app? Delete its block below before deploying.
+#
+# Each app keeps its data in RC_DIR/data/<app>. Back up that "data" folder and you have everything.
+name: root-cellar
+
+services:
+  checkbook:
+    image: node:22-bookworm-slim
+    container_name: root-cellar-checkbook
+    restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm ci --omit=dev --ignore-scripts --no-audit --no-fund --loglevel=error && exec node src/server.js"
+    environment:
+      - TZ=${TZ:-UTC}
+      - NODE_ENV=production
+      - PORT=8080
+      - DATA_DIR=/data
+    ports:
+      - "5080:8080"
+    volumes:
+      - ${RC_DIR:-/opt/root-cellar}/server/checkbook:/app
+      - ${RC_DIR:-/opt/root-cellar}/data/checkbook:/data
+
+  notes:
+    image: node:22-alpine
+    container_name: root-cellar-notes
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "--disable-warning=ExperimentalWarning", "server.js"]
+    environment:
+      - TZ=${TZ:-UTC}
+      - PORT=8085
+      - DATA_DIR=/data
+      - BACKUP_DIR=/data/backups
+    ports:
+      - "8085:8085"
+    volumes:
+      - ${RC_DIR:-/opt/root-cellar}/server/notes:/app:ro
+      - ${RC_DIR:-/opt/root-cellar}/data/notes:/data
+
+  movies:
+    image: node:22-alpine
+    container_name: root-cellar-movies
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "--disable-warning=ExperimentalWarning", "server.js"]
+    environment:
+      - TZ=${TZ:-UTC}
+      - PORT=8093
+      - DATA_DIR=/data
+    ports:
+      - "8093:8093"
+    volumes:
+      - ${RC_DIR:-/opt/root-cellar}/server/movies:/app:ro
+      - ${RC_DIR:-/opt/root-cellar}/data/movies:/data
+
+  labels:
+    image: node:22-bookworm-slim
+    container_name: root-cellar-labels
+    restart: unless-stopped
+    working_dir: /app
+    command: ["sh", "/app/docker-entrypoint.sh"]
+    environment:
+      - TZ=${TZ:-UTC}
+      - PORT=8095
+      - DATA_DIR=/data
+    ports:
+      - "8095:8095"
+    volumes:
+      - ${RC_DIR:-/opt/root-cellar}/server/labels:/app:ro
+      - ${RC_DIR:-/opt/root-cellar}/data/labels:/data
+      # Lets Labels see a USB label printer plugged into this server (it's fine if you don't have one).
+      - /dev/bus/usb:/dev/bus/usb
+    device_cgroup_rules:
+      - "c 189:* rmw"

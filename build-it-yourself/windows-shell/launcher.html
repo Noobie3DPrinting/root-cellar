@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Launcher</title><link rel="stylesheet" href="shell.css"></head><body>
+<div class="brand"><img src="icons/suite.png" alt=""><div><h1 id="suite"></h1><div class="muted small" id="ver"></div></div></div>
+<div class="grid" id="apps"></div>
+<div class="card" id="servers"><h2>Server addresses</h2><p class="muted small">Apps marked "server app" open straight from your home server. Checkbook and Notes ask for their address when you sign in, and keep an offline copy on this PC.</p><div id="srv"></div></div>
+<p class="muted small" style="margin-top:18px">Tip: each app also has its own Start menu shortcut. Press Ctrl+Shift+L in any app to come back here.</p>
+<script>
+(async () => {
+  const i = await RC.info();
+  document.title = i.suite; document.getElementById('suite').textContent = i.suite; document.getElementById('ver').textContent = 'Desktop app v' + i.version;
+  document.getElementById('apps').innerHTML = i.apps.map(a => `<button class="app" data-id="${a.id}"><img src="icons/${a.id}.png" alt=""><span><b>${a.name}</b><span class="muted small">${a.kind === 'server' ? 'Server app' : 'Works offline'}</span></span></button>`).join('');
+  document.querySelectorAll('.app').forEach(b => b.onclick = () => RC.open(b.dataset.id));
+  const srv = i.apps.filter(a => a.kind === 'server');
+  document.getElementById('servers').hidden = !srv.length;
+  document.getElementById('srv').innerHTML = srv.map(a => `<div class="row"><span><b>${a.name}</b><br><span class="muted small">${i.servers[a.id] || 'Not set yet'}</span></span>${i.servers[a.id] ? `<button class="link" data-clear="${a.id}">Change</button>` : `<button class="link" data-open="${a.id}">Set up</button>`}</div>`).join('');
+  document.querySelectorAll('[data-clear]').forEach(b => b.onclick = async () => { await RC.clearServer(b.dataset.clear); RC.open(b.dataset.clear); });
+  document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => RC.open(b.dataset.open));
+})();
+</script></body></html>

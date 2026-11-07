@@ -1,0 +1,62 @@
+{
+  "name": "Root Cellar",
+  "exe": "RootCellar",
+  "appId": "org.rootcellar.desktop",
+  "version": "1.0.0",
+  "publisher": "Root Cellar",
+  "bg": "#f5efe6",
+  "icon": "../icons/suite.png",
+  "apps": [
+    {
+      "id": "checkbook",
+      "name": "Checkbook",
+      "kind": "offline",
+      "host": "checkbook.local",
+      "ui": "../../server/checkbook/public",
+      "nativeVar": "CB_NATIVE",
+      "icon": "../icons/checkbook.png",
+      "bg": "#f4f6f5",
+      "pkg": "org.rootcellar.checkbook",
+      "apk": "root-cellar-checkbook.apk",
+      "bar": "#1f6f5f",
+      "barDark": "#0f1716"
+    },
+    {
+      "id": "notes",
+      "name": "Notes",
+      "kind": "offline",
+      "host": "notes.local",
+      "ui": "../../server/notes/public",
+      "nativeVar": "NOTES_NATIVE",
+      "icon": "../icons/notes.png",
+      "bg": "#f6f3ee",
+      "pkg": "org.rootcellar.notes",
+      "apk": "root-cellar-notes.apk",
+      "bar": "#2f6fde",
+      "barDark": "#16181d"
+    },
+    {
+      "id": "movies",
+      "name": "Movies",
+      "kind": "server",
+      "icon": "../icons/movies.png",
+      "bg": "#0e0c0a",
+      "pkg": "org.rootcellar.movies",
+      "apk": "root-cellar-movies.apk",
+      "bar": "#0e0c0a",
+      "barDark": "#0e0c0a"
+    },
+    {
+      "id": "labels",
+      "name": "Labels",
+      "kind": "server",
+      "icon": "../icons/labels.png",
+      "bg": "#f5efe6",
+      "pkg": "org.rootcellar.labels",
+      "apk": "root-cellar-labels.apk",
+      "bar": "#c4552d",
+      "barDark": "#1b1814"
+    }
+  ],
+  "versionCode": 1
+}
