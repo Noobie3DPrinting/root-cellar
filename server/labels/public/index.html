@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Labels</title>
+<meta name="description" content="Root Cellar Labels — design and print labels from any phone or computer">
+<meta name="theme-color" content="#f5efe6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1814" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Labels">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img src="icon.svg" alt="" width="30" height="30"><div><h1>Labels</h1><span class="sub">Root Cellar</span></div></div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="design" class="on">Design</button>
+    <button data-tab="saved">Saved</button>
+    <button data-tab="recent">Recent</button>
+  </nav>
+  <button class="iconbtn" id="btnSettings" aria-label="Settings">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+  </button>
+</header>
+
+<main id="design" class="view">
+  <section class="stage">
+    <div class="paper" id="paper"><canvas id="preview" aria-label="Label preview"></canvas></div>
+    <div class="dims" id="dims"></div>
+  </section>
+
+  <section class="panel">
+    <div class="row2">
+      <label class="field"><span>Printer</span><select id="printer"></select></label>
+      <label class="field"><span>Label size</span><select id="size"></select></label>
+    </div>
+    <div class="row2" id="customRow" hidden>
+      <label class="field"><span>Width (in)</span><input id="cw" inputmode="decimal" type="number" step="0.05" min="0.4" max="12"></label>
+      <label class="field"><span>Height (in)</span><input id="ch" inputmode="decimal" type="number" step="0.05" min="0.4" max="12"></label>
+    </div>
+
+    <label class="field"><span>Text <em>one line per row</em></span>
+      <textarea id="text" rows="4" placeholder="Type your label…" spellcheck="true"></textarea></label>
+
+    <div class="field"><span>Font</span><div class="fonts" id="fonts"></div></div>
+
+    <div class="row2">
+      <div class="field"><span>Text size</span>
+        <div class="seg" id="sizeMode"><button data-v="auto" class="on">Fit</button><button data-v="fixed">Set</button></div>
+        <div class="slider" id="ptWrap" hidden><input type="range" id="pt" min="6" max="96" step="1" value="18"><b id="ptVal">18 pt</b></div>
+      </div>
+      <div class="field"><span>Style</span>
+        <div class="seg icons" id="style">
+          <button data-k="bold" title="Bold"><b>B</b></button><button data-k="italic" title="Italic"><i>I</i></button><button data-k="first" title="Bold first line only">1st</button>
+        </div>
+      </div>
+    </div>
+    <div class="field"><span>Line up</span>
+      <div class="seg" id="align"><button data-v="left">Left</button><button data-v="center" class="on">Center</button><button data-v="right">Right</button></div>
+    </div>
+
+    <div class="field"><span>Picture</span>
+      <div class="art" id="art"></div>
+      <input type="file" id="upload" accept="image/*" hidden>
+    </div>
+    <div id="artOpts" hidden>
+      <div class="field"><span>Picture spot</span>
+        <div class="seg" id="artPos"><button data-v="left" class="on">Left</button><button data-v="right">Right</button><button data-v="top">Top</button><button data-v="behind">Behind</button><button data-v="only">Only</button></div>
+      </div>
+      <div class="field"><span>Picture size</span><div class="slider"><input type="range" id="artScale" min="30" max="100" value="85"><b id="artScaleVal">85%</b></div></div>
+    </div>
+
+    <div class="row2">
+      <div class="field"><span>Border</span>
+        <div class="seg" id="border"><button data-v="none" class="on">None</button><button data-v="thin">Thin</button><button data-v="thick">Thick</button><button data-v="round">Round</button></div>
+      </div>
+      <div class="field"><span>Copies</span>
+        <div class="stepper"><button id="cMinus" aria-label="Fewer">−</button><input id="copies" inputmode="numeric" value="1"><button id="cPlus" aria-label="More">+</button></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="btnPrint">Print</button>
+      <button class="btn" id="btnPdf">Download PDF</button>
+      <button class="btn" id="btnSave">Save</button>
+      <button class="btn ghost" id="btnClear">Clear</button>
+    </div>
+    <p class="hint" id="hint"></p>
+  </section>
+</main>
+
+<main id="saved" class="view" hidden>
+  <input class="search" id="savedQ" type="search" placeholder="Search saved labels…">
+  <div class="list" id="savedList"></div>
+</main>
+<main id="recent" class="view" hidden>
+  <div class="list" id="recentList"></div>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<section class="sheet" id="sheet" hidden role="dialog" aria-modal="true"><button class="close" id="sheetClose" aria-label="Close">×</button><div id="sheetBody"></div></section>
+<div class="auth" id="auth" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="clipart.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

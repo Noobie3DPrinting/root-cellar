@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Checkbook</title>
+<meta name="description" content="Root Cellar Checkbook — your household checkbook, on your own server">
+<meta name="theme-color" content="#1f6f5f" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1716" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Checkbook">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="stylesheet" href="/styles.css?v=1.0.0">
+<script src="/theme.js?v=1.0.0"></script>
+</head>
+<body>
+<div id="app" class="app">
+  <header class="topbar" id="topbar"></header>
+  <div class="syncbar" id="syncbar" hidden></div>
+  <main class="view" id="view"></main>
+  <nav class="bottomnav" id="nav" hidden>
+    <button data-nav="accounts" aria-label="Accounts"><span class="ic">▤</span><span>Accounts</span></button>
+    <button data-nav="register" aria-label="Register"><span class="ic">≡</span><span>Register</span></button>
+    <button data-nav="add" class="fab" aria-label="Add transaction">+</button>
+    <button data-nav="reports" aria-label="Reports"><span class="ic">◔</span><span>Reports</span></button>
+    <button data-nav="settings" aria-label="Settings"><span class="ic">⚙</span><span>Settings</span></button>
+  </nav>
+</div>
+<div id="sheet-root"></div>
+<div id="toast" class="toast" hidden></div>
+<script src="/native-config.js?v=1.0.0"></script>
+<script src="/sync.js?v=1.0.0"></script>
+<script src="/app.js?v=1.0.0"></script>
+<script src="/bills.js?v=1.0.0"></script>
+</body>
+</html>
